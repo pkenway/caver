@@ -1,6 +1,9 @@
 from enum import Enum
 import random
+import math
 # generate a tiled 2D cave map
+# goal is for the map to be immutable
+# update functions will return a new copy of the map
 
 # constants
 MAX_LAYERS = 3
@@ -65,11 +68,11 @@ class Tile():
         return ' '
 
 
-def generate_map(width, height, seed=1):
+def generate_map(width, height, layer_count=3):
     tile_map = TileMap(width=width, height=height)
     
     # add splashes of mud and sand
-    tile_map = add_layers(tile_map)
+    tile_map = add_layers(tile_map, layer_count=layer_count)
 
     return tile_map
 
@@ -78,7 +81,7 @@ def generate_map(width, height, seed=1):
 def add_layer(tile_map, layer_type, layer_size):
     return random_spread(tile_map, lambda tile: Tile(composition=layer_type), layer_size)
     
-def add_layers(tile_map, layer_count= None, layer_types=None):
+def add_layers(tile_map, layer_count= None, layer_types=None, layer_size_avg=None, layer_size_deviation=None):
     
     if layer_count is None:
         layer_count = random.randint(1, layer_count or MAX_LAYERS)
@@ -86,12 +89,18 @@ def add_layers(tile_map, layer_count= None, layer_types=None):
     if layer_types is None:
         layer_types = list(range(2,3))
 
+    if layer_size_avg is None:
+        layer_size_avg = int( (tile_map.width + tile_map.height) / 2)
+
+    if layer_size_deviation is None:
+        layer_size_deviation = int(math.sqrt(layer_size_avg))
+
     print('generating %d layers' % layer_count)
 
     for i in range(layer_count):
         # choose a tile type
         stratum = TileTypes(random.choice(layer_types))
-        layer_size = random.randint(4, 10)
+        layer_size = random.randint(layer_size_avg - layer_size_deviation, layer_size_avg + layer_size_deviation)
         print('new layer - type: %s, size: %d' % (stratum, layer_size))
         tile_map = add_layer(tile_map, stratum, layer_size)        
     return tile_map
@@ -160,6 +169,6 @@ def dump_map(tileset):
 
 
 if __name__ == '__main__':
-    tile_map = generate_map(width=10, height=10)
+    tile_map = generate_map(width=100, height=100)
     dump_map(tile_map)
 
