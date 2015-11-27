@@ -27,12 +27,15 @@ class TileMap():
             self.width = len(tiles[0])
             self.height = len(tiles)
         elif width is not None and height is not None:
-            self.tiles = [[Tile()] * width] * height
+            self.tiles = []
+            for _ in range(0, height):
+                self.tiles.append([Tile()] * width)
+            print(len(self.tiles))
+            print(len(self.tiles[0]))
             self.width = width
             self.height = height
         else:
             raise Error('Tile map must have dimensions or an array of tiles')
-
 
     def alter_tile(self, x, y, change_func):
         return TileMap(tiles=[
@@ -50,6 +53,11 @@ class TileMap():
         
     def list_tiles(self):
         return [ tup[0] for tup in self.enumerate() ]
+
+    def get_tile_at(self, coords):    
+        return self.tiles[coords[1]][coords[0]]
+    def set_tile_at(self, coords, tile):
+        self.tiles[coords[1]][coords[0]] = tile
 
 class Tile():
     composition = None
@@ -72,15 +80,11 @@ def generate_map(width, height, layer_count=3):
     tile_map = TileMap(width=width, height=height)
     
     # add splashes of mud and sand
-    tile_map = add_layers(tile_map, layer_count=layer_count)
+    add_layers(tile_map, layer_count=layer_count)
 
     return tile_map
 
 
-
-def add_layer(tile_map, layer_type, layer_size):
-    return random_spread(tile_map, lambda tile: Tile(composition=layer_type), layer_size)
-    
 def add_layers(tile_map, layer_count= None, layer_types=None, layer_size_avg=None, layer_size_deviation=None):
     
     if layer_count is None:
@@ -101,41 +105,45 @@ def add_layers(tile_map, layer_count= None, layer_types=None, layer_size_avg=Non
         # choose a tile type
         stratum = TileTypes(random.choice(layer_types))
         layer_size = random.randint(layer_size_avg - layer_size_deviation, layer_size_avg + layer_size_deviation)
+
         print('new layer - type: %s, size: %d' % (stratum, layer_size))
-        tile_map = add_layer(tile_map, stratum, layer_size)        
-    return tile_map
+        add_layer(tile_map, stratum, layer_size)        
 
-def random_spread(tile_map, change_tile, tiles_to_change, coords=None, changed_coords=None):
-    """
-    tile_map: the tile map to be udpated
-    change_tile: a function to operate on tiles having the change applied
-    tiles_to_change: number of tiles to operate on
-    coords: current position
-    """
-    if tiles_to_change == 0:
-        return tile_map
 
-    if coords is None:
-        # choose a starting point
-        coords = (random.randrange(0, tile_map.width), random.randrange(0, tile_map.height))
-        changed_coords = []
-    else:
-        # get a random bordering point
-        borders = border_coords(tile_map, changed_coords)
-        if len(borders) == 0:
+def add_layer(tile_map, layer_type, layer_size):
+    random_spread(tile_map, lambda tile: Tile(composition=layer_type), layer_size)
 
-            raise Exception('No border tiles found. Number of changed tiles : %d, total tiles: %d' 
-                % (len(changed_coords), tile_map.width * tile_map.height))
-        coords = borders[random.randrange(0, len(borders))]
-    
-    new_tiles = tile_map.alter_tile(coords[0], coords[1], change_tile)
 
-    return random_spread(
-        new_tiles,
-        change_tile,
-        tiles_to_change - 1,
-        coords,
-        changed_coords + [coords])
+def random_spread(tile_map, change_tile_func, tiles_to_change):
+    changed_coords = []
+    border_tiles = []
+    for _ in range(0, tiles_to_change):
+        if border_tiles == []:
+            coords = (random.randrange(0, tile_map.width), random.randrange(0, tile_map.height))
+            border_tiles = adjacent_coords(tile_map, coords)
+            print(coords)
+        else:
+            coords = border_tiles[random.randrange(0, len(border_tiles))]
+            border_tiles.remove(coords)
+        tile_map.set_tile_at(coords, change_tile_func(tile_map.get_tile_at(coords)))
+        changed_coords.append(coords)
+        adjacent_tiles = adjacent_coords(tile_map, coords)
+        # add to the ppol of border tiles
+        border_tiles += [coords for coords in adjacent_tiles if coords not in border_tiles and coords not in changed_coords]
+    print(changed_coords)
+
+
+def adjacent_coords(tile_map, coords):
+    adjacents = []
+    if coords[0] > 0:
+        adjacents.append((coords[0] -1, coords[1]))
+    if coords[0] < tile_map.width - 1:
+        adjacents.append((coords[0] +1, coords[1]))
+    if coords[1] > 0:
+        adjacents.append((coords[0], coords[1] - 1))
+    if coords[1] < tile_map.height - 1:
+        adjacents.append((coords[0], coords[1] + 1))
+    return adjacents
 
 
 def is_adjacent(coords, coordset):
@@ -153,13 +161,6 @@ def border_coords(tile_map, selected_tiles):
     return [(x, y) for (x, y, tile) in tile_map.enumerate() if is_adjacent((x,y), selected_tiles)]
 
 
-# get coordinates for an extension of set of tiles
-def random_growth(tile_map, active_coords):
-    #get the set of tiles 
-    borderCoords = border_coords(tile_map, selected_tiles)
-
-    return borderCoords(random.randrange(0, len(borderCoords)))
-
 def dump_map(tileset):
     for row in tileset.tiles:
         agg_tiles = ''
@@ -169,6 +170,6 @@ def dump_map(tileset):
 
 
 if __name__ == '__main__':
-    tile_map = generate_map(width=100, height=100)
+    tile_map = generate_map(width=100, height=100, layer_count=10)
     dump_map(tile_map)
 
