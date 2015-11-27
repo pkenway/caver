@@ -16,6 +16,7 @@ class TileMap():
             self.height = height
         else:
             raise Error('Tile map must have dimensions or an array of tiles')
+        self.size = (self.width, self.height)
 
     def alter_tile(self, x, y, change_func):
         return TileMap(tiles=[
