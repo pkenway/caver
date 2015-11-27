@@ -14,8 +14,14 @@ class LayerTypes(Enum):
 
 
 class FloorTypes(Enum):
-    Stone = 4
-    Sand = 5
-    Mud = 6
-    Water = 7
+    Stone = 1
+    Sand = 2
+    Mud = 3
+    Water = 4
 
+class WaterTypes(Enum):
+    North = 1
+    South = 2
+    East = 3
+    West = 4
+    Still = 5
