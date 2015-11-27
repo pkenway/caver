@@ -1,6 +1,6 @@
-from enum import Enum
 import random
 import math
+from environment import terrain
 # generate a tiled 2D cave map
 # goal is for the map to be immutable
 # update functions will return a new copy of the map
@@ -8,16 +8,6 @@ import math
 # constants
 MAX_LAYERS = 3
 
-class TileTypes(Enum):
-    #types of filled-in tiles
-    rock = 1
-    sand = 2
-    mud = 3
-
-    stone_floor = 4
-    sand_floor = 5
-    mud_floor = 6
-    water = 7
 
 class TileMap():
 
@@ -56,6 +46,7 @@ class TileMap():
 
     def get_tile_at(self, coords):    
         return self.tiles[coords[1]][coords[0]]
+
     def set_tile_at(self, coords, tile):
         self.tiles[coords[1]][coords[0]] = tile
 
@@ -63,15 +54,15 @@ class Tile():
     composition = None
     objects = []
 
-    def __init__(self, composition=TileTypes.rock):
+    def __init__(self, composition=terrain.LayerTypes.Rock):
         self.composition = composition
 
     def display_char(self):
-        if self.composition == TileTypes.rock:
+        if self.composition == terrain.LayerTypes.Rock:
             return '#'
-        if self.composition == TileTypes.sand:
+        if self.composition == terrain.LayerTypes.Sand:
             return '*'
-        if self.composition == TileTypes.mud:
+        if self.composition == terrain.LayerTypes.Mud:
             return '.'
         return ' '
 
@@ -91,6 +82,7 @@ def add_layers(tile_map, layer_count= None, layer_types=None, layer_size_avg=Non
         layer_count = random.randint(1, layer_count or MAX_LAYERS)
 
     if layer_types is None:
+
         layer_types = list(range(2,3))
 
     if layer_size_avg is None:
@@ -103,7 +95,7 @@ def add_layers(tile_map, layer_count= None, layer_types=None, layer_size_avg=Non
 
     for i in range(layer_count):
         # choose a tile type
-        stratum = TileTypes(random.choice(layer_types))
+        stratum = terrain.LayerTypes(random.choice(layer_types))
         layer_size = random.randint(layer_size_avg - layer_size_deviation, layer_size_avg + layer_size_deviation)
 
         print('new layer - type: %s, size: %d' % (stratum, layer_size))
