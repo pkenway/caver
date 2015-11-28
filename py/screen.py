@@ -3,12 +3,14 @@ from curses import wrapper
 from generator import cave_generator
 from logging import log
 from enum import Enum
+import display
 
 #constants
 MAX_INPUT_BUFFER = 1024
 
 #interactively browse a generated map
 def browse_map(stdscr, tile_map):
+    display.init_color_pairs()
     screen_size = tuple(reversed(stdscr.getmaxyx()))
     log('Browsing map. screen dimensions: %d x %d' % screen_size)
     
@@ -16,7 +18,7 @@ def browse_map(stdscr, tile_map):
 
     screen_coords = (0, 0)
     input_buffer = []
-
+    write_map_to_pad(tile_map, pad, *(screen_coords + screen_size))
     while True:
         write_map_to_pad(tile_map, pad, *(screen_coords + screen_size))
         
@@ -27,8 +29,11 @@ def browse_map(stdscr, tile_map):
 
         screen_coords = check_navigate(screen_coords, input_buffer, screen_size, tile_map.size)
         log(' - %d, %d -' % screen_coords)
-        if input_buffer[0] == ord('Q'):
-           exit()
+        check_commands(pad, input_buffer, tile_map)
+
+def exit_program():
+    exit()
+
 
 # transformation for each key
 SCREEN_MOVES = {
@@ -39,7 +44,21 @@ SCREEN_MOVES = {
 }
 
 SCREEN_ZOOM_DELAY = 10
-SCREEN_ZOOM_FACTOR = 2
+SCREEN_ZOOM_FACTOR = 4
+
+
+def check_commands(pad, input_buffer, tile_map):
+    if input_buffer[0] == ord('Q'):
+        exit_program()
+        return True
+
+    if input_buffer[0] == ord('p'):
+        log('dumping map to file')
+        with open('map_dump.log', 'w') as f:
+            cave_generator.dump_map(tile_map, f)
+        return True
+
+
 
 # watch the input stream for map navigation commands
 def check_navigate(current_coords, input_buffer, screen_size, map_size):
@@ -71,19 +90,22 @@ def key_held_down(input_buffer, input_char):
     for cchar in input_buffer[:SCREEN_ZOOM_DELAY]:
         if cchar != input_char:
             return False
-    log('ZOOOMING: %c' % chr(input_char))
     return True
  
 
 def write_map_to_pad(tile_map, pad, start_x, start_y, width, height):
     for y in range(start_y, start_y + height):
-        for x in range(start_x, start_x + width):
-            current_char = ord(tile_map.get_tile_at((x, y)).display_char())
-            pad.addch(y, x, current_char)
+        for x in range(start_x, start_x + width):            
+            tile_display = display.get_tile_display(tile_map.get_tile_at((x, y)))
+            pad.addch(y, x, tile_display[0], curses.color_pair(tile_display[1]))
+            
     pad.refresh(start_y, start_x,  0, 0, height - 1, width - 1)
 
 
 if __name__ == '__main__':
     tile_map = cave_generator.generate_map(width=200, height=100)
     wrapper(browse_map, tile_map)
+
+
+
 

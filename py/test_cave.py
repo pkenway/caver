@@ -23,19 +23,20 @@ def test_screen_navigate():
 
     initial_coords = (0,0)
     screen = (50, 50)
+    map_size = (100, 100)
     print(initial_coords)
 
-    new_coords = check_navigate(initial_coords, [curses.KEY_UP], screen)
+    new_coords = check_navigate(initial_coords, [curses.KEY_UP], screen, map_size)
     print(new_coords)
     assert new_coords == initial_coords
 
-    new_coords = check_navigate(initial_coords, [curses.KEY_DOWN], screen)
+    new_coords = check_navigate(initial_coords, [curses.KEY_DOWN], screen, map_size)
     assert new_coords == (0, 1)
 
-    new_coords = check_navigate(initial_coords, [curses.KEY_LEFT], screen)
+    new_coords = check_navigate(initial_coords, [curses.KEY_LEFT], screen, map_size)
     assert new_coords == initial_coords
 
-    new_coords = check_navigate(initial_coords, [curses.KEY_RIGHT], screen)
+    new_coords = check_navigate(initial_coords, [curses.KEY_RIGHT], screen, map_size)
     assert new_coords == (1, 0)
 
 

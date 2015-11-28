@@ -85,15 +85,11 @@ def border_coords(tile_map, selected_tiles):
     return [(x, y) for (x, y, tile) in tile_map.enumerate() if is_adjacent((x,y), selected_tiles)]
 
 
-def dump_map(tileset):
+def dump_map(tileset, buffer):
     for row in tileset.tiles:
-        agg_tiles = ''
-        for tile in row:
-            agg_tiles += tile.display_char()
-        print(agg_tiles)
+        tile_display = ''.join([tile.display_char() for tile in row ])
+        buffwer.write(tile_display + '\n')
 
-# generate a path through the map. we can use this to make
-# def random_path(tile_map, change_tile_func):
 
 
 
