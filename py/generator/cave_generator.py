@@ -11,6 +11,14 @@ def generate_map(width, height, layer_count=10):
     # add splashes of mud and sand
     add_rock_layers(tile_map, layer_count=layer_count)
 
+    # add a drainage point and create rivers
+    drainage_coords = (random.randint(0, tile_map.width), random.randint(0, tile_map.height))
+    river_count = random.randint(3,10)
+
+    for _ in range(0, river_count):
+        add_river(tile_map, drainage_coords)
+
+
     return tile_map
 
 
@@ -38,6 +46,38 @@ def add_rock_layers(tile_map, layer_count= None, layer_types=None, layer_size_av
 
 def add_rock_layer(tile_map, layer_type, layer_size):
     random_spread(tile_map, lambda tile: Tile(composition=layer_type), layer_size)
+
+
+def add_river(tileset, drainage_coords):
+    # randomly generate a river, from a point on the edge of the map to the drainage
+    start_location = random_edge_point(tileset)
+    scale = tileset.width * tileset.height
+
+    # move a random distance towards the drainage point
+    walk_length = random.randint(0, int(scale / 5))
+
+    current_location = start_location
+
+    while current_location != drainage_coords:
+
+
+        vector = (
+            drainage_coords[0] - current_location[0] * scale,
+            drainage_coords[1] - current_location[1] * scale)
+
+        new_location = (
+            current_location[0] + random.randint(0, vector[0]) if vector[0] > 0 else 0, 
+            current_location[1] + random.randint(0,vector[1]) if vector[1] > 0 else 0)
+        draw_river_section(tileset, current_location, new_location)
+        current_location = new_location
+
+
+def draw_river_section(tileset, start_location, end_location):
+    #move from point A to point B by the straightest line
+    current_location = start_location
+    while current_location != end_location:
+        current_location = advance_towards(current_location, end_location)
+        tileset.set_tile_at(current_location, Tile(terrain.WaterTypes.Still))
 
 
 def random_spread(tile_map, change_tile_func, tiles_to_change):
@@ -85,10 +125,47 @@ def border_coords(tile_map, selected_tiles):
     return [(x, y) for (x, y, tile) in tile_map.enumerate() if is_adjacent((x,y), selected_tiles)]
 
 
-def dump_map(tileset, buffer):
+def dump_map(tileset, outfile):
     for row in tileset.tiles:
         tile_display = ''.join([tile.display_char() for tile in row ])
-        buffwer.write(tile_display + '\n')
+        outfile.write(tile_display + '\n')
+
+def random_edge_point(tileset):
+    # choose an edge
+    edge = random.randint(0, 3)
+
+    if edge == 0:
+        return (0, random.randint(0, tileset.height))
+    elif edge == 1:
+        return (tileset.width -1, random.randint(0, tileset.height))
+    elif edge == 2:
+        return (random.randint(0, tileset.width), 0)
+    elif edge == 3:
+        return (random.randint(0, tileset.width), tileset.height - 1)
+
+    raise ValueError('%d is not a valid edge index' % edge)
+
+
+def advance_towards(start_location, end_location, skip=1):
+    delta = (end_location[0] - start_location[0], end_location[1] - start_location[1])
+    if delta[0] > delta[1]:
+        if delta[0] > 0:
+            return (start_location[0] -skip, start_location[1])
+        else:
+            return (start_location[0] +skip, start_location[1])
+    else:
+        if delta[1] > 0:
+            return (start_location[0], start_location[1] -skip)
+        else:
+            return (start_location[0], start_location[1] +skip)
+
+
+
+
+
+
+
+
 
 
 

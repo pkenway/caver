@@ -8,13 +8,14 @@ import curses
 WHITE = 0 #white on black is always 0 in curses
 RED = 1
 YELLOW = 2
-
+BLUE = 3
 def init_color_pairs():
     bg = curses.COLOR_BLACK
     # curses.init_pair(WHITE, curses.COLOR_WHITE, bg)
 
     curses.init_pair(RED, curses.COLOR_RED, bg)
     curses.init_pair(YELLOW, curses.COLOR_YELLOW, bg)
+    curses.init_pair(BLUE, curses.COLOR_BLUE, bg)
 
 
 # tile display
@@ -22,8 +23,11 @@ def init_color_pairs():
 TILE_DISPLAYS = {
     terrain.LayerTypes.Rock: ('#',WHITE),
     terrain.LayerTypes.Sand: ('.', YELLOW),
-    terrain.LayerTypes.Mud: ('*', RED)
+    terrain.LayerTypes.Mud: ('*', RED),
+    terrain.WaterTypes.Still: ('.', BLUE)
 }
+
+TILE_DISPLAYS 
 
 def get_tile_display(tile):
     if tile.composition not in TILE_DISPLAYS:

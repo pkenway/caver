@@ -29,7 +29,12 @@ def browse_map(stdscr, tile_map):
 
         screen_coords = check_navigate(screen_coords, input_buffer, screen_size, tile_map.size)
         log(' - %d, %d -' % screen_coords)
-        check_commands(pad, input_buffer, tile_map)
+        if check_commands(pad, input_buffer, tile_map):
+            continue
+
+
+
+
 
 def exit_program():
     exit()
@@ -43,8 +48,8 @@ SCREEN_MOVES = {
     curses.KEY_RIGHT: (1, 0)
 }
 
-SCREEN_ZOOM_DELAY = 10
-SCREEN_ZOOM_FACTOR = 4
+SCREEN_ZOOM_DELAY = 5
+SCREEN_ZOOM_FACTOR = 10
 
 
 def check_commands(pad, input_buffer, tile_map):
@@ -57,6 +62,8 @@ def check_commands(pad, input_buffer, tile_map):
         with open('map_dump.log', 'w') as f:
             cave_generator.dump_map(tile_map, f)
         return True
+        
+    return False
 
 
 
@@ -103,7 +110,7 @@ def write_map_to_pad(tile_map, pad, start_x, start_y, width, height):
 
 
 if __name__ == '__main__':
-    tile_map = cave_generator.generate_map(width=200, height=100)
+    tile_map = cave_generator.generate_map(width=200, height=100, layer_count=30)
     wrapper(browse_map, tile_map)
 
 
