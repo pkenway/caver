@@ -47,37 +47,62 @@ def add_rock_layers(tile_map, layer_count= None, layer_types=None, layer_size_av
 def add_rock_layer(tile_map, layer_type, layer_size):
     random_spread(tile_map, lambda tile: Tile(composition=layer_type), layer_size)
 
+# return a random number between 0 and the integer
+def rand_to(num) :
+    if num > 0:
+        return random.randint(0, num)
+    elif num < 0:
+        return random.randint(num, 0)
+    return 0
 
-def add_river(tileset, drainage_coords):
+def distance(a, b):
+    return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) **2)
+
+def add_river(tileset, drainage):
     # randomly generate a river, from a point on the edge of the map to the drainage
     start_location = random_edge_point(tileset)
+    
     scale = tileset.width * tileset.height
 
     # move a random distance towards the drainage point
-    walk_length = random.randint(0, int(scale / 5))
+    walk_length = rand_to(int(scale / 5))
 
     current_location = start_location
 
-    while current_location != drainage_coords:
+    step_count = 0
+    while current_location != drainage and step_count <tileset.width + tileset.height:
+        # crate vector space between current point and drainage location
+        vector = ( drainage[0] - current_location[0], drainage[1] - current_location[1])
+        # scale down to our step
+        magnitude = distance(current_location, drainage)
+        magnitude = min(magnitude, int(distance(current_location, drainage)))
 
 
-        vector = (
-            drainage_coords[0] - current_location[0] * scale,
-            drainage_coords[1] - current_location[1] * scale)
-
+        if scale < magnitude:
+            vector = (int(vector[0] * scale / magnitude), int(vector[1] * scale / magnitude))
+        #choose a random point in the space
         new_location = (
-            current_location[0] + random.randint(0, vector[0]) if vector[0] > 0 else 0, 
-            current_location[1] + random.randint(0,vector[1]) if vector[1] > 0 else 0)
+            current_location[0] + rand_to(vector[0]), 
+            current_location[1] + rand_to(vector[1]))
+        # draw a line to that point
         draw_river_section(tileset, current_location, new_location)
         current_location = new_location
+        step_count += 1
 
 
 def draw_river_section(tileset, start_location, end_location):
     #move from point A to point B by the straightest line
     current_location = start_location
-    while current_location != end_location:
+    step_count = 0
+    while current_location != end_location and step_count < tileset.width + tileset.height:
         current_location = advance_towards(current_location, end_location)
-        tileset.set_tile_at(current_location, Tile(terrain.WaterTypes.Still))
+
+        if tileset.valid_coords(current_location):
+            tileset.set_tile_at(current_location, Tile(terrain.WaterTypes.Still))
+        else:
+            raise ValueError('bad location for river tile %d, %d' % current_location)
+
+        step_count += 1
 
 
 def random_spread(tile_map, change_tile_func, tiles_to_change):
@@ -135,29 +160,29 @@ def random_edge_point(tileset):
     edge = random.randint(0, 3)
 
     if edge == 0:
-        return (0, random.randint(0, tileset.height))
+        return (0, random.randint(0, tileset.height - 1))
     elif edge == 1:
-        return (tileset.width -1, random.randint(0, tileset.height))
+        return (tileset.width -1, random.randint(0, tileset.height -1))
     elif edge == 2:
-        return (random.randint(0, tileset.width), 0)
+        return (random.randint(0, tileset.width - 1), 0)
     elif edge == 3:
-        return (random.randint(0, tileset.width), tileset.height - 1)
+        return (random.randint(0, tileset.width - 1), tileset.height - 1)
 
     raise ValueError('%d is not a valid edge index' % edge)
 
 
 def advance_towards(start_location, end_location, skip=1):
     delta = (end_location[0] - start_location[0], end_location[1] - start_location[1])
-    if delta[0] > delta[1]:
+    if abs(delta[0]) > abs(delta[1]):
         if delta[0] > 0:
-            return (start_location[0] -skip, start_location[1])
+            return (start_location[0] + skip, start_location[1])
         else:
-            return (start_location[0] +skip, start_location[1])
+            return (start_location[0] - skip, start_location[1])
     else:
         if delta[1] > 0:
-            return (start_location[0], start_location[1] -skip)
+            return (start_location[0], start_location[1] + skip)
         else:
-            return (start_location[0], start_location[1] +skip)
+            return (start_location[0], start_location[1] - skip)
 
 
 

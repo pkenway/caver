@@ -17,6 +17,7 @@ class TileMap():
         else:
             raise Error('Tile map must have dimensions or an array of tiles')
         self.size = (self.width, self.height)
+        self.logger = logger
 
     def alter_tile(self, x, y, change_func):
         return TileMap(tiles=[
