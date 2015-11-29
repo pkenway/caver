@@ -25,3 +25,10 @@ class WaterTypes(Enum):
     East = 3
     West = 4
     Still = 5
+
+
+class Dir(Enum):
+    UP = 0
+    LEFT = 1
+    DOWN = 2
+    RIGHT = 3

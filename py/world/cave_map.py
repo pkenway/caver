@@ -67,8 +67,9 @@ class Tile():
     composition = None
     objects = []
 
-    def __init__(self, composition=None):
+    def __init__(self, composition=None, **kwargs):
         self.composition = composition
+        self.props = kwargs
 
     def display_char(self):
         if self.composition == terrain.LayerTypes.Rock:

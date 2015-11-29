@@ -1,6 +1,6 @@
 import curses
 from curses import wrapper
-from generator import cave_generator
+import cave_generator
 from logging import log
 from enum import Enum
 import display
@@ -28,7 +28,7 @@ def browse_map(stdscr, tile_map):
             del input_buffer[-1]
 
         screen_coords = check_navigate(screen_coords, input_buffer, screen_size, tile_map.size)
-        log(' - %d, %d -' % screen_coords)
+        # log(' - %d, %d -' % screen_coords)
         if check_commands(pad, input_buffer, tile_map):
             continue
 
@@ -110,7 +110,7 @@ def write_map_to_pad(tile_map, pad, start_x, start_y, width, height):
 
 
 if __name__ == '__main__':
-    tile_map = cave_generator.generate_map(width=200, height=100, layer_count=30)
+    tile_map = cave_generator.generate_map(width=1000, height=500, layer_count=30)
     wrapper(browse_map, tile_map)
 
 

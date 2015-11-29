@@ -1,12 +1,16 @@
-from generator import terrain, cave_generator
+
+from world import terrain
+from mapgen import tools
 from screen import check_navigate
+import cave_generator
 import curses
+import display
 
-# def test_make_cave():
-# 	cave = cave_generator.generate_map(10,7)
+def test_make_cave():
+	cave = cave_generator.generate_map(10,7)
 
-# 	assert len(cave.tiles) == 7
-# 	assert len(cave.tiles[0]) == 10
+	assert len(cave.tiles) == 7
+	assert len(cave.tiles[0]) == 10
 
 
 def test_layer_generation():
@@ -27,11 +31,11 @@ class PrintLogger():
 
 def test_river_generation():
 
-    for _ in range(0, 10000):
+    for _ in range(0, 1000):
         tile_map = cave_generator.TileMap(width=10, height=10, logger=PrintLogger())
 
         cave_generator.add_river(tile_map, (5,5))
-        assert len([tile for x,y,tile in tile_map.enumerate() if tile.composition == terrain.WaterTypes.Still])
+        assert len([tile for x,y,tile in tile_map.enumerate() if tile.composition == terrain.FloorTypes.Water])
     
 def test_screen_navigate():
 
@@ -54,9 +58,8 @@ def test_screen_navigate():
     assert new_coords == (1, 0)
 
 def test_random_edge():
-    tileset = cave_generator.TileMap(width=10, height=10)
     for _ in range(0, 100):
-        edge_point = cave_generator.random_edge_point(tileset)
+        edge_point = tools.random_edge_point(10, 10)
         is_edge = False
 
         if edge_point[0] == 0 or edge_point[0] == 9:
@@ -68,11 +71,24 @@ def test_random_edge():
         assert is_edge
 
 def test_advance():
-    assert cave_generator.advance_towards((0,0), (1,0)) == (1,0)
-    assert cave_generator.advance_towards((10,0), (0,0)) == (9, 0)
-    assert cave_generator.advance_towards((0,0), (0,1)) == (0,1)
+    assert tools.advance_towards((0,0), (1,0)) == (1,0)
+    assert tools.advance_towards((10,0), (0,0)) == (9, 0)
+    assert tools.advance_towards((0,0), (0,1)) == (0,1)
 
-    assert cave_generator.advance_towards((10,10), (10, 0)) == (10, 9)
+    assert tools.advance_towards((10,10), (10, 0)) == (10, 9)
+
+
+
+    # ((terrain.Dir.UP, terrain.Dir.DOWN), '║'),
+    # ((terrain.Dir.UP, terrain.Dir.LEFT), '╝'),
+    # ((terrain.Dir.UP, terrain.Dir.RIGHT), '╚'),
+    # ((terrain.Dir.LEFT, terrain.Dir.RIGHT), '═'),
+    # ((terrain.Dir.LEFT, terrain.Dir.DOWN), '╗'),
+    # ((terrain.Dir.DOWN, terrain.Dir.RIGHT), '╔'),
+
+def test_river_display():
+
+    assert display.get_pipe_display((terrain.Dir.LEFT, terrain.Dir.UP)) == '╝'
 
 
 if __name__ == '__main__':
