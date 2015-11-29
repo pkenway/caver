@@ -1,6 +1,7 @@
 
-from world import terrain
-from mapgen import tools
+from caverlib.world import terrain
+from caverlib.world.mapping import Point
+from caverlib.mapgen import tools
 from screen import check_navigate
 import cave_generator
 import curses
@@ -17,11 +18,11 @@ def test_layer_generation():
     for _ in range(0, 1000):
         tile_map = cave_generator.TileMap(width=10, height=10)
         cave_generator.add_rock_layer(tile_map, terrain.LayerTypes.Sand, 5)
-        assert len([tile for (x, y, tile) in tile_map.enumerate() if tile.composition == terrain.LayerTypes.Sand]) == 5
+        assert len([tile for (point, tile) in tile_map.enumerate() if tile.composition == terrain.LayerTypes.Sand]) == 5
 
         cave_generator.add_rock_layer(tile_map, terrain.LayerTypes.Mud, 5)
-        assert len([tile for (x, y, tile) in tile_map.enumerate() if tile.composition == terrain.LayerTypes.Mud]) == 5
-        assert len([tile for (x, y, tile) in tile_map.enumerate() if tile.composition == terrain.LayerTypes.Sand]) <= 5
+        assert len([tile for (point, tile) in tile_map.enumerate() if tile.composition == terrain.LayerTypes.Mud]) == 5
+        assert len([tile for (point, tile) in tile_map.enumerate() if tile.composition == terrain.LayerTypes.Sand]) <= 5
 
 
 class PrintLogger():
@@ -34,12 +35,12 @@ def test_river_generation():
     for _ in range(0, 1000):
         tile_map = cave_generator.TileMap(width=10, height=10, logger=PrintLogger())
 
-        cave_generator.add_river(tile_map, (5,5))
-        assert len([tile for x,y,tile in tile_map.enumerate() if tile.composition == terrain.FloorTypes.Water])
+        cave_generator.add_river(tile_map, Point(5,5))
+        assert len([tile for point, tile in tile_map.enumerate() if tile.composition == terrain.FloorTypes.Water])
     
 def test_screen_navigate():
 
-    initial_coords = (0,0)
+    initial_coords = Point(0,0)
     screen = (50, 50)
     map_size = (100, 100)
     print(initial_coords)
@@ -71,11 +72,11 @@ def test_random_edge():
         assert is_edge
 
 def test_advance():
-    assert tools.advance_towards((0,0), (1,0)) == (1,0)
-    assert tools.advance_towards((10,0), (0,0)) == (9, 0)
-    assert tools.advance_towards((0,0), (0,1)) == (0,1)
+    assert tools.advance_towards(Point(0,0), Point(1,0)) == Point(1,0)
+    assert tools.advance_towards(Point(10,0), Point(0,0)) == Point(9, 0)
+    assert tools.advance_towards(Point(0,0), Point(0,1)) == Point(0,1)
 
-    assert tools.advance_towards((10,10), (10, 0)) == (10, 9)
+    assert tools.advance_towards(Point(10,10), Point(10, 0)) == Point(10, 9)
 
 
 

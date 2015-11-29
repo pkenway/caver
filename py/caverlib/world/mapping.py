@@ -1,5 +1,27 @@
 import pickle
 from . import terrain
+from collections import namedtuple
+
+class Point(namedtuple('Point', ['x', 'y'])):
+    __slots__ = ()
+
+    def __add__(self, other):
+        if isinstance(other, Point):
+            return Point(self.x + other.x, self.y + other.y)
+        return Point(self.x + other, self.y + other)
+
+    def __radd__(self, other):
+        return Point(self.x + other, self.y + other)
+
+    def __mul__(self, other):
+        if isinstance(other, Point):
+            return Point(self.x * other.x, self.y * other.y)
+        return Point(self.x * other, self.y * other)
+
+    def __sub__(self, other):
+        if isinstance(other, Point):
+            return Point(self.x - other.x, self.y - other.y)
+        return Point(self.x - other, self.y - other)
 
 class TileMap():
 
@@ -19,34 +41,30 @@ class TileMap():
         self.size = (self.width, self.height)
         self.logger = logger
 
-    def alter_tile(self, x, y, change_func):
-        return TileMap(tiles=[
-            [change_func(tile) if tilex == x and tiley == y else tile for tilex, tile in enumerate(row)]
-        for tiley, row in enumerate(self.tiles)])
 
     def enumerate(self):
         # return [(x, tup[0], tup[1]) for x, tup in enumerate([(y, row) for y, row in enumerate(self.tiles)])]
         rv = []
         for y, row in enumerate(self.tiles):
             for x, tile in enumerate(row):
-                rv.append((x, y, tile))
+                rv.append((Point(x, y), tile))
         return rv
 
     def list_tiles(self):
         return [ tup[0] for tup in self.enumerate() ]
 
     def valid_coords(self, coords):
-        return ( 0 <= coords[0] < self.width) and (0 <= coords[1] < self.height)
+        return ( 0 <= coords.x < self.width) and (0 <= coords.y < self.height)
 
     def get_tile_at(self, coords):    
         if not self.valid_coords(coords):
-            exc_args = coords + (self.width, self.height)
+            exc_args = tuple(coords) + (self.width, self.height)
             raise ValueError('coordinates (%d, %d) out of bounds. Map size: (%d, %d)' % exc_args)
 
-        return self.tiles[coords[1]][coords[0]]
+        return self.tiles[coords.y][coords.x]
 
     def set_tile_at(self, coords, tile):
-        self.tiles[coords[1]][coords[0]] = tile
+        self.tiles[coords.y][coords.x] = tile
 
     def save(self, file_obj):
         if not isinstance(file_obj, File):

@@ -1,8 +1,8 @@
 import random
 import math
-from world import terrain
-from mapgen import tools
-from world.cave_map import TileMap, Tile
+from caverlib.world import terrain
+from caverlib.mapgen import tools
+from caverlib.world.mapping import TileMap, Tile, Point
 
 # generate a tiled 2D cave map
 
@@ -13,7 +13,7 @@ def generate_map(width, height, layer_count=10):
     add_rock_layers(tile_map, layer_count=layer_count)
 
     # add a drainage point and create rivers
-    drainage_coords = (random.randint(0, tile_map.width - 1), random.randint(0, tile_map.height - 1))
+    drainage_coords = Point(random.randint(0, tile_map.width - 1), random.randint(0, tile_map.height - 1))
     river_count = random.randint(3,10)
 
     for _ in range(0, river_count):
@@ -50,12 +50,12 @@ def add_rock_layer(tile_map, layer_type, layer_size):
 
 
 def flow_direction(a, b):
-    if a[0] == b[0]:
-        if a[1] > b[1]:
+    if a.x == b.x:
+        if a.y > b.y:
             return terrain.Dir.UP
         else:
             return terrain.Dir.DOWN
-    if a[0] > b[0]:
+    if a.x > b.x:
         return terrain.Dir.LEFT
     return terrain.Dir.RIGHT
 
@@ -91,20 +91,22 @@ def create_river(tileset, drainage):
     current_location = start_location
 
     step_count = 0
+    
     while current_location != drainage and step_count <tileset.width + tileset.height:
         # crate vector space between current point and drainage location
-        vector = ( drainage[0] - current_location[0], drainage[1] - current_location[1])
+        vector =  drainage - current_location
         # scale down to our step
         magnitude = int(tools.distance(current_location, drainage))
         # magnitude = min(magnitude, int(distance(current_location, drainage)))
 
 
         if scale < magnitude:
-            vector = (int(vector[0] * scale / magnitude), int(vector[1] * scale / magnitude))
+            vector = Point(int(vector[0] * scale / magnitude), int(vector[1] * scale / magnitude))
         #choose a random point in the space
-        new_location = (
-            current_location[0] + tools.rand_to(vector[0]), 
-            current_location[1] + tools.rand_to(vector[1]))
+
+        rand_vector = Point(tools.rand_to(vector.x), tools.rand_to(vector.y))
+        new_location = current_location  + rand_vector
+        
         # draw a line to that point
         river_tiles += get_river_section(tileset, current_location, new_location)
         current_location = new_location
@@ -126,7 +128,7 @@ def random_spread(tile_map, change_tile_func, tiles_to_change):
     border_tiles = []
     for _ in range(0, tiles_to_change):
         if border_tiles == []:
-            coords = (random.randrange(0, tile_map.width), random.randrange(0, tile_map.height))
+            coords = Point(random.randrange(0, tile_map.width), random.randrange(0, tile_map.height))
             border_tiles = tools.adjacent_coords(tile_map, coords)        
         else:
             coords = border_tiles[random.randrange(0, len(border_tiles))]

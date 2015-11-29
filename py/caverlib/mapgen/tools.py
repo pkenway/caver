@@ -1,31 +1,32 @@
 import random
 import math
+from ..world.mapping import Point
 
 def is_adjacent(coords, coordset):
     if coords in coordset:
         return False
     for c in coordset:
-        if c[0] == coords[0] and abs(c[1] - coords[1]) == 1:
+        if c.x == coords.x and abs(c.y - coords.y) == 1:
             return True
-        if abs(c[0] - coords[0]) == 1 and c[1] == coords[1]:
+        if abs(c.x - coords.x) == 1 and c.y == coords.y:
             return True
     return False
 
 
 def border_coords(tile_map, selected_tiles):
-    return [(x, y) for (x, y, tile) in tile_map.enumerate() if is_adjacent((x,y), selected_tiles)]
+    return [point for (point, tile) in tile_map.enumerate() if is_adjacent(point, selected_tiles)]
 
 
 def adjacent_coords(tile_map, coords):
     adjacents = []
-    if coords[0] > 0:
-        adjacents.append((coords[0] -1, coords[1]))
-    if coords[0] < tile_map.width - 1:
-        adjacents.append((coords[0] +1, coords[1]))
-    if coords[1] > 0:
-        adjacents.append((coords[0], coords[1] - 1))
-    if coords[1] < tile_map.height - 1:
-        adjacents.append((coords[0], coords[1] + 1))
+    if coords.x > 0:
+        adjacents.append(Point(coords.x -1, coords.y))
+    if coords.x < tile_map.width - 1:
+        adjacents.append(Point(coords.x +1, coords.y))
+    if coords.y > 0:
+        adjacents.append(Point(coords.x, coords.y - 1))
+    if coords.y < tile_map.height - 1:
+        adjacents.append(Point(coords.x, coords.y + 1))
     return adjacents
 
 
@@ -40,35 +41,30 @@ def create_direct_path(a, b):
 
 
 def advance_towards(a, b, step=1):
-    delta = (b[0] - a[0], b[1] - a[1])
-    if abs(delta[0]) > abs(delta[1]):
-        if delta[0] > 0:
-            return (a[0] + step, a[1])
+    delta = b - a
+    if abs(delta.x) > abs(delta.y):
+        if delta.x > 0:
+            return Point(a.x + step, a.y)
         else:
-            return (a[0] - step, a[1])
+            return Point(a.x - step, a.y)
     else:
-        if delta[1] > 0:
-            return (a[0], a[1] + step)
+        if delta.y > 0:
+            return Point(a.x, a.y + step)
         else:
-            return (a[0], a[1] - step)
+            return Point(a.x, a.y - step)
 
-
-def vector(a, b):
-    return (b[0] - a[0], b[1] - a[1])
 
 def distort_path(path_coords, distoration_level=1):
     path_start = path_coords[0]
     path_end = path_coords[-1]
-    path_vector = vector(path_start, path_end)
+
+    path_vector = path_end - path_start
 
     waypoints = []
     for _ in range(0, distoration_level):
         # add in a waypoint
-
-        waypoints.append((
-            path_start[0] + rand_to(path_vector[0]),
-            path_start[1] + rand_to(path_vector[1])
-            ))
+        rand_vector = Point(rand_to(path_vector.x), rand_to(path_vector.y))
+        waypoints.append( path_start + rand_vector)
     current_point = path_start
     new_path = [current_point]
     for w in waypoints:
@@ -89,7 +85,7 @@ def rand_to(num) :
 
 
 def distance(a, b):
-    return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) **2)
+    return math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) **2)
 
 
 def random_edge_point(width, height):
@@ -97,12 +93,12 @@ def random_edge_point(width, height):
     edge = random.randint(0, 3)
 
     if edge == 0:
-        return (0, random.randint(0, height - 1))
+        return Point(0, random.randint(0, height - 1))
     elif edge == 1:
-        return (width -1, random.randint(0, height -1))
+        return Point(width -1, random.randint(0, height -1))
     elif edge == 2:
-        return (random.randint(0, width - 1), 0)
+        return Point(random.randint(0, width - 1), 0)
     elif edge == 3:
-        return (random.randint(0, width - 1), height - 1)
+        return Point(random.randint(0, width - 1), height - 1)
 
     raise ValueError('%d is not a valid edge index' % edge)

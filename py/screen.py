@@ -1,7 +1,8 @@
 import curses
 from curses import wrapper
 import cave_generator
-from logging import log
+from caverlib.logging import log
+from caverlib.world.mapping import Point
 from enum import Enum
 import display
 
@@ -16,11 +17,11 @@ def browse_map(stdscr, tile_map):
     
     pad = curses.newpad(tile_map.height, tile_map.width)
 
-    screen_coords = (0, 0)
+    screen_coords = Point(0, 0)
     input_buffer = []
-    write_map_to_pad(tile_map, pad, *(screen_coords + screen_size))
+    write_map_to_pad(tile_map, pad, *(tuple(screen_coords) + screen_size))
     while True:
-        write_map_to_pad(tile_map, pad, *(screen_coords + screen_size))
+        write_map_to_pad(tile_map, pad, *(tuple(screen_coords) + screen_size))
         
         input_buffer.insert(0,stdscr.getch())
 
@@ -33,19 +34,16 @@ def browse_map(stdscr, tile_map):
             continue
 
 
-
-
-
 def exit_program():
     exit()
 
 
 # transformation for each key
 SCREEN_MOVES = {
-    curses.KEY_UP: (0, -1),
-    curses.KEY_DOWN: (0, 1),
-    curses.KEY_LEFT: (-1, 0),
-    curses.KEY_RIGHT: (1, 0)
+    curses.KEY_UP: Point(0, -1),
+    curses.KEY_DOWN: Point(0, 1),
+    curses.KEY_LEFT: Point(-1, 0),
+    curses.KEY_RIGHT: Point(1, 0)
 }
 
 SCREEN_ZOOM_DELAY = 5
@@ -102,8 +100,9 @@ def key_held_down(input_buffer, input_char):
 
 def write_map_to_pad(tile_map, pad, start_x, start_y, width, height):
     for y in range(start_y, start_y + height):
-        for x in range(start_x, start_x + width):            
-            tile_display = display.get_tile_display(tile_map.get_tile_at((x, y)))
+        for x in range(start_x, start_x + width):
+            coords = Point(x, y)          
+            tile_display = display.get_tile_display(tile_map.get_tile_at(coords))
             pad.addch(y, x, tile_display[0], curses.color_pair(tile_display[1]))
             
     pad.refresh(start_y, start_x,  0, 0, height - 1, width - 1)

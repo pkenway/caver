@@ -1,6 +1,6 @@
 # how to display elements in the game world
 
-from world import terrain
+from caverlib.world import terrain
 import curses
 
 
