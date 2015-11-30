@@ -23,6 +23,8 @@ class props(Enum):
     BURNING = 27,
     WET = 28,
     THROWABLE = 29,
+    INVISIBLE = 30,
+    FLOATS = 31,
 
     BEHAVIOR = 100,
     MOVE = 101,

@@ -3,9 +3,10 @@ from curses import wrapper
 import cave_generator
 from caverlib.logging import log
 from caverlib.world.mapping import Point
+from caverlib.world.entities import entities
 from enum import Enum
 import display
-from collections import namedtuple
+import commands
 
 #constants
 MAX_INPUT_BUFFER = 1024
@@ -39,79 +40,30 @@ def exit_program():
     exit()
 
 
-class IAction(namedtuple('IAction', ['name','keys','target'])):
-    __slots__ = ()
-
-# transformation for each key
-NAVIGATION_MOVES = [
-    
-    IAction(
-        'move_left',
-        [curses.KEY_LEFT, ord('h')],
-        Point(-1, 0)
-    ),
-
-    IAction(
-        'move_right',
-        [curses.KEY_RIGHT, ord('l')],
-        Point(1, 0)
-    ),
-
-    IAction(
-        'move_up',
-        [curses.KEY_UP, ord('k')],
-        Point(0,-1)
-    ),
-
-    IAction(
-        'move_down',
-        [curses.KEY_DOWN, ord('j')],
-        Point(0, 1)
-    ),
-
-    IAction(
-        'move_diag_upleft',
-        [curses.KEY_A1, ord('y')],
-        Point(-1, -1)
-    ),
-
-    IAction(
-        'move_diag_upright',
-        [curses.KEY_A3, ord('u')],
-        Point(1, -1)
-    ),
-
-    IAction(
-        'move_diag_downright',
-        [curses.KEY_C3, ord('m')],
-        Point(1, 1)
-    ),
-
-    IAction(
-        'move_diag_downleft',
-        [curses.KEY_C1, ord('n')],
-        Point(-1, 1))
-
-]
-
-
 SCREEN_ZOOM_DELAY = 5
 SCREEN_ZOOM_FACTOR = 10
 
 
 def check_commands(pad, input_buffer, tile_map):
-    if input_buffer[0] == ord('Q'):
+    if len(input_buffer) == 0:
+        return
+
+    input_char = input_buffer[0]
+    command = commands.get_first_command(commands.SYSTEM_COMMANDS, input_char)
+    if not command:
+        return
+
+    if command.name == 'exit_program':
         exit_program()
         return True
 
-    if input_buffer[0] == ord('p'):
+    if command.name == 'print_map':
         log('dumping map to file')
         with open('map_dump.log', 'w') as f:
             cave_generator.dump_map(tile_map, f)
         return True
         
     return False
-
 
 
 # watch the input stream for map navigation commands
@@ -122,7 +74,7 @@ def check_navigate(current_coords, input_buffer, screen_size, map_size):
 
     input_char = input_buffer[0]
 
-    actions = [a for a in NAVIGATION_MOVES if input_char in a.keys]
+    actions = [a for a in commands.NAVIGATION_MOVES if input_char in a.keys]
 
     if not actions:
         return current_coords
@@ -155,7 +107,10 @@ def write_map_to_pad(tile_map, pad, start_x, start_y, width, height):
     for y in range(start_y, start_y + height):
         for x in range(start_x, start_x + width):
             coords = Point(x, y)          
-            tile_display = display.get_tile_display(tile_map.get_tile_at(coords))
+            if not tile_map.valid_coords(coords):
+                tile_display = display.BLANK
+            else:
+                tile_display = display.get_tile_display(tile_map.get_tile_at(coords))
             pad.addch(y, x, tile_display[0], curses.color_pair(tile_display[1]))
             
     pad.refresh(start_y, start_x,  0, 0, height - 1, width - 1)

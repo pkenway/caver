@@ -1,5 +1,5 @@
 
-from caverlib.world import terrain
+from caverlib.world import terrain, entities
 from caverlib.world.mapping import Point
 from caverlib.mapgen import tools
 from screen import check_navigate
@@ -18,11 +18,11 @@ def test_layer_generation():
     for _ in range(0, 1000):
         tile_map = cave_generator.TileMap(width=10, height=10)
         cave_generator.add_rock_layer(tile_map, terrain.LayerTypes.Sand, 5)
-        assert len([tile for (point, tile) in tile_map.enumerate() if tile.composition == terrain.LayerTypes.Sand]) == 5
+        assert len([tile for (point, tile) in tile_map.iterate() if tile.composition == terrain.LayerTypes.Sand]) == 5
 
         cave_generator.add_rock_layer(tile_map, terrain.LayerTypes.Mud, 5)
-        assert len([tile for (point, tile) in tile_map.enumerate() if tile.composition == terrain.LayerTypes.Mud]) == 5
-        assert len([tile for (point, tile) in tile_map.enumerate() if tile.composition == terrain.LayerTypes.Sand]) <= 5
+        assert len([tile for (point, tile) in tile_map.iterate() if tile.composition == terrain.LayerTypes.Mud]) == 5
+        assert len([tile for (point, tile) in tile_map.iterate() if tile.composition == terrain.LayerTypes.Sand]) <= 5
 
 
 class PrintLogger():
@@ -36,7 +36,7 @@ def test_river_generation():
         tile_map = cave_generator.TileMap(width=10, height=10, logger=PrintLogger())
 
         cave_generator.add_river(tile_map, Point(5,5))
-        assert len([tile for point, tile in tile_map.enumerate() if tile.composition == terrain.FloorTypes.Water])
+        assert len([tile for point, tile in tile_map.iterate() if tile.composition == terrain.FloorTypes.Water])
     
 def test_screen_navigate():
 
@@ -88,6 +88,9 @@ def test_advance():
 def test_river_display():
 
     assert display.get_pipe_display((terrain.Dir.LEFT, terrain.Dir.UP)) == '╝'
+
+
+# def test_add_entities():
 
 
 if __name__ == '__main__':

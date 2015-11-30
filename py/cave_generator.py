@@ -1,6 +1,6 @@
 import random
 import math
-from caverlib.world import terrain
+from caverlib.world import terrain, entities
 from caverlib.mapgen import tools
 from caverlib.world.mapping import TileMap, Tile, Point
 
@@ -19,10 +19,20 @@ def generate_map(width, height, layer_count=10):
     for _ in range(0, river_count):
         add_river(tile_map, drainage_coords)
 
+    # add random detritus
+    entity_list = entities.tag_search('common', 'natural')
+    if entity_list:
+        for _ in range(0, 50):
+            add_entity_at_random_location(tile_map, random.choice(entity_list))
 
     return tile_map
 
 
+##########################
+#
+#    Soil composition functions
+#
+##########################
 def add_rock_layers(tile_map, layer_count= None, layer_types=None, layer_size_avg=None, layer_size_deviation=None):
     
     if layer_count is None:
@@ -49,6 +59,12 @@ def add_rock_layer(tile_map, layer_type, layer_size):
     random_spread(tile_map, lambda tile: Tile(composition=layer_type), layer_size)
 
 
+##########################
+#
+#    Water functions
+#
+###########################
+
 def flow_direction(a, b):
     if a.x == b.x:
         if a.y > b.y:
@@ -59,7 +75,7 @@ def flow_direction(a, b):
         return terrain.Dir.LEFT
     return terrain.Dir.RIGHT
 
-
+# will modify the tileset
 def add_river(tileset, drainage):
     new_river = create_river(tileset, drainage)
     for i, current_location in enumerate(new_river):
@@ -129,15 +145,27 @@ def random_spread(tile_map, change_tile_func, tiles_to_change):
     for _ in range(0, tiles_to_change):
         if border_tiles == []:
             coords = Point(random.randrange(0, tile_map.width), random.randrange(0, tile_map.height))
-            border_tiles = tools.adjacent_coords(tile_map, coords)        
+            border_tiles = tools.adjacent_coords(tile_map.size, coords)        
         else:
             coords = border_tiles[random.randrange(0, len(border_tiles))]
             border_tiles.remove(coords)
         tile_map.set_tile_at(coords, change_tile_func(tile_map.get_tile_at(coords)))
         changed_coords.append(coords)
-        adjacent_tiles = tools.adjacent_coords(tile_map, coords)
+        adjacent_tiles = tools.adjacent_coords(tile_map.size, coords)
         # add to the ppol of border tiles
         border_tiles += [coords for coords in adjacent_tiles if coords not in border_tiles and coords not in changed_coords]
+
+
+##########################
+#
+#    Item generation
+#
+###########################
+
+
+def add_entity_at_random_location(tile_map, entity):
+    coords = tools.random_point(tile_map.size)
+    tile_map.get_tile_at(coords).entities.append(entity)
 
 
 def dump_map(tileset, outfile):

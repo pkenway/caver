@@ -13,19 +13,19 @@ def is_adjacent(coords, coordset):
     return False
 
 
-def border_coords(tile_map, selected_tiles):
-    return [point for (point, tile) in tile_map.enumerate() if is_adjacent(point, selected_tiles)]
+# def border_coords(tile_map, selected_tiles):
+#     return [point for (point, tile) in tile_map.enumerate() if is_adjacent(point, selected_tiles)]
 
 
-def adjacent_coords(tile_map, coords):
+def adjacent_coords(map_size, coords):
     adjacents = []
     if coords.x > 0:
         adjacents.append(Point(coords.x -1, coords.y))
-    if coords.x < tile_map.width - 1:
+    if coords.x < map_size.x - 1:
         adjacents.append(Point(coords.x +1, coords.y))
     if coords.y > 0:
         adjacents.append(Point(coords.x, coords.y - 1))
-    if coords.y < tile_map.height - 1:
+    if coords.y < map_size.y - 1:
         adjacents.append(Point(coords.x, coords.y + 1))
     return adjacents
 
@@ -83,6 +83,10 @@ def rand_to(num) :
         return random.randint(num, 0)
     return 0
 
+def random_point(size):
+    return Point(
+        rand_to(size.x - 1),
+        rand_to(size.y -  1))
 
 def distance(a, b):
     return math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) **2)
