@@ -5,6 +5,7 @@ from caverlib.logging import log
 from caverlib.world.mapping import Point
 from enum import Enum
 import display
+from collections import namedtuple
 
 #constants
 MAX_INPUT_BUFFER = 1024
@@ -38,13 +39,61 @@ def exit_program():
     exit()
 
 
+class IAction(namedtuple('IAction', ['name','keys','target'])):
+    __slots__ = ()
+
 # transformation for each key
-SCREEN_MOVES = {
-    curses.KEY_UP: Point(0, -1),
-    curses.KEY_DOWN: Point(0, 1),
-    curses.KEY_LEFT: Point(-1, 0),
-    curses.KEY_RIGHT: Point(1, 0)
-}
+NAVIGATION_MOVES = [
+    
+    IAction(
+        'move_left',
+        [curses.KEY_LEFT, ord('h')],
+        Point(-1, 0)
+    ),
+
+    IAction(
+        'move_right',
+        [curses.KEY_RIGHT, ord('l')],
+        Point(1, 0)
+    ),
+
+    IAction(
+        'move_up',
+        [curses.KEY_UP, ord('k')],
+        Point(0,-1)
+    ),
+
+    IAction(
+        'move_down',
+        [curses.KEY_DOWN, ord('j')],
+        Point(0, 1)
+    ),
+
+    IAction(
+        'move_diag_upleft',
+        [curses.KEY_A1, ord('y')],
+        Point(-1, -1)
+    ),
+
+    IAction(
+        'move_diag_upright',
+        [curses.KEY_A3, ord('u')],
+        Point(1, -1)
+    ),
+
+    IAction(
+        'move_diag_downright',
+        [curses.KEY_C3, ord('m')],
+        Point(1, 1)
+    ),
+
+    IAction(
+        'move_diag_downleft',
+        [curses.KEY_C1, ord('n')],
+        Point(-1, 1))
+
+]
+
 
 SCREEN_ZOOM_DELAY = 5
 SCREEN_ZOOM_FACTOR = 10
@@ -73,20 +122,24 @@ def check_navigate(current_coords, input_buffer, screen_size, map_size):
 
     input_char = input_buffer[0]
 
-    t = SCREEN_MOVES.get(input_char,None)
-    if not t:
+    actions = [a for a in NAVIGATION_MOVES if input_char in a.keys]
+
+    if not actions:
         return current_coords
+    
+    move_vector = sum([a.target for a in actions])
 
     rate = SCREEN_ZOOM_FACTOR if key_held_down(input_buffer, input_char) else 1
 
     # apply movement
-    result = tuple([p + t[i] * rate for i, p in enumerate(current_coords)])
+    new_coords = current_coords + (move_vector * rate)
 
     # constraints
-    result = tuple([ max(p, 0) for p in result])
-    result = tuple([ min(p, map_size[i] - screen_size[i] - 1) for i, p in enumerate(result)])
+    new_coords = Point(*[ max(p, 0) for p in new_coords])
+    new_coords = Point(*[ min(p, map_size[i] - screen_size[i] - 1) for i, p in enumerate(new_coords)])
 
-    return result
+    return new_coords
+
 
 def key_held_down(input_buffer, input_char):
     if len(input_buffer) < SCREEN_ZOOM_DELAY:
@@ -109,7 +162,7 @@ def write_map_to_pad(tile_map, pad, start_x, start_y, width, height):
 
 
 if __name__ == '__main__':
-    tile_map = cave_generator.generate_map(width=1000, height=500, layer_count=30)
+    tile_map = cave_generator.generate_map(width=500, height=500, layer_count=30)
     wrapper(browse_map, tile_map)
 
 
