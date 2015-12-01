@@ -31,14 +31,20 @@ class TileMap():
             self.width = len(tiles[0])
             self.height = len(tiles)
         elif width and height:
-            self.tiles = []
-            for _ in range(0, height):
-                self.tiles.append([Tile(default_terrain)] * width)
             self.width = width
             self.height = height
+            self.create_tiles(default_terrain)
         else:
             raise Error('Tile map must have dimensions or an array of tiles')
         self.logger = logger
+
+    def create_tiles(self, default_terrain):
+        self.tiles = []
+        for _ in range(0, self.height):
+            new_row = []
+            for __ in range(0, self.width):
+                new_row.append(Tile(default_terrain))
+            self.tiles.append(new_row)
 
     @property
     def size(self):
@@ -83,14 +89,9 @@ class TileMap():
 class Tile():
     composition = None
 
-    def __init__(self, composition=None, entities=None, **kwargs):
+    def __init__(self, composition=None, **kwargs):
         self.composition = composition
         self.props = kwargs
-        if isinstance(entities, list):
-            self.entites = entities
-        elif entities:
-            self.entities = [entities]
-        else:
-            self.entities = []
+        self.entities = []
 
 

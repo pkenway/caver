@@ -1,6 +1,5 @@
 
-from caverlib.world import terrain, entities
-from caverlib.world.mapping import Point
+from caverlib.world import terrain, entities, mapping
 from caverlib.mapgen import tools
 from screen import check_navigate
 import cave_generator
@@ -16,7 +15,7 @@ def test_make_cave():
 
 def test_layer_generation():
     for _ in range(0, 1000):
-        tile_map = cave_generator.TileMap(width=10, height=10)
+        tile_map = mapping.TileMap(width=10, height=10)
         cave_generator.add_rock_layer(tile_map, terrain.LayerTypes.Sand, 5)
         assert len([tile for (point, tile) in tile_map.iterate() if tile.composition == terrain.LayerTypes.Sand]) == 5
 
@@ -33,14 +32,14 @@ class PrintLogger():
 def test_river_generation():
 
     for _ in range(0, 1000):
-        tile_map = cave_generator.TileMap(width=10, height=10, logger=PrintLogger())
+        tile_map = mapping.TileMap(width=10, height=10, logger=PrintLogger())
 
-        cave_generator.add_river(tile_map, Point(5,5))
+        cave_generator.add_river(tile_map, mapping.Point(5,5))
         assert len([tile for point, tile in tile_map.iterate() if tile.composition == terrain.FloorTypes.Water])
     
 def test_screen_navigate():
 
-    initial_coords = Point(0,0)
+    initial_coords = mapping.Point(0,0)
     screen = (50, 50)
     map_size = (100, 100)
 
@@ -48,13 +47,13 @@ def test_screen_navigate():
     assert new_coords == initial_coords
 
     new_coords = check_navigate(initial_coords, [curses.KEY_DOWN], screen, map_size)
-    assert new_coords == Point(0, 1)
+    assert new_coords == mapping.Point(0, 1)
 
     new_coords = check_navigate(initial_coords, [curses.KEY_LEFT], screen, map_size)
     assert new_coords == initial_coords
 
     new_coords = check_navigate(initial_coords, [curses.KEY_RIGHT], screen, map_size)
-    assert new_coords == Point(1, 0)
+    assert new_coords == mapping.Point(1, 0)
 
 def test_random_edge():
     for _ in range(0, 100):
@@ -70,11 +69,11 @@ def test_random_edge():
         assert is_edge
 
 def test_advance():
-    assert tools.advance_towards(Point(0,0), Point(1,0)) == Point(1,0)
-    assert tools.advance_towards(Point(10,0), Point(0,0)) == Point(9, 0)
-    assert tools.advance_towards(Point(0,0), Point(0,1)) == Point(0,1)
+    assert tools.advance_towards(mapping.Point(0,0), mapping.Point(1,0)) == mapping.Point(1,0)
+    assert tools.advance_towards(mapping.Point(10,0), mapping.Point(0,0)) == mapping.Point(9, 0)
+    assert tools.advance_towards(mapping.Point(0,0), mapping.Point(0,1)) == mapping.Point(0,1)
 
-    assert tools.advance_towards(Point(10,10), Point(10, 0)) == Point(10, 9)
+    assert tools.advance_towards(mapping.Point(10,10), mapping.Point(10, 0)) == mapping.Point(10, 9)
 
 
 
@@ -90,7 +89,40 @@ def test_river_display():
     assert display.get_pipe_display((terrain.Dir.LEFT, terrain.Dir.UP)) == '╝'
 
 
-# def test_add_entities():
+def test_entity_tag_esarch():
+    ent_list = entities.tag_search('common', 'natural')
+    print(ent_list)
+    assert len(ent_list) > 0
+
+    created_entity = ent_list[0]()
+    assert isinstance(created_entity, entities.Entity)
+
+def test_add_entities():
+    tile_map = mapping.TileMap(width=10, height=10)
+    # stick = entities.stick()
+    cave_generator.add_entity_at_random_location(tile_map, entities.stick)
+
+    occupied_tile = None
+    coords = None
+    for point, tile in tile_map.iterate():
+        if tile.entities:
+            occupied_tile = tile
+            coords = point
+            break
+
+    for point, tile in tile_map.iterate():
+        if point == coords:
+            continue
+        assert tile.entities == []
+
+
+    assert occupied_tile
+
+    assert entities.visible_entity(occupied_tile.entities).name == 'stick'
+
+    rock = entities.rock()
+    occupied_tile.entities.insert(0, rock)
+    assert entities.visible_entity(occupied_tile.entities).name == 'rock'
 
 
 if __name__ == '__main__':

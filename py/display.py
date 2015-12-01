@@ -83,7 +83,7 @@ def get_tile_display(tile):
     if visible_entity:
         # display the uppermost visible entity
         # visible entities MUST have a display in ENTITY_DISPLAYS!
-        return ENTITY_DISPLAYS[visible_entity[0]]
+        return ENTITY_DISPLAYS[visible_entity.name]
 
     if tile.composition in TILE_DISPLAYS:
         return TILE_DISPLAYS[tile.composition]

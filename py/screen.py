@@ -1,9 +1,9 @@
 import curses
 from curses import wrapper
 import cave_generator
-from caverlib.logging import log
 from caverlib.world.mapping import Point
 from caverlib.world.entities import entities
+from caverlib.logging import log
 from enum import Enum
 import display
 import commands

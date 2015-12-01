@@ -3,6 +3,7 @@ import math
 from caverlib.world import terrain, entities
 from caverlib.mapgen import tools
 from caverlib.world.mapping import TileMap, Tile, Point
+from caverlib.logging import log
 
 # generate a tiled 2D cave map
 
@@ -165,7 +166,7 @@ def random_spread(tile_map, change_tile_func, tiles_to_change):
 
 def add_entity_at_random_location(tile_map, entity):
     coords = tools.random_point(tile_map.size)
-    tile_map.get_tile_at(coords).entities.append(entity)
+    tile_map.get_tile_at(coords).entities.append(entity())
 
 
 def dump_map(tileset, outfile):
