@@ -1,0 +1,64 @@
+{
+    "navigation": [
+        
+        {
+            "action": "navigate",
+            "keys": [260, "h"],
+            "data": [-1, 0]
+        },
+
+        {
+            "action": "navigate",
+            "key": [261, "l"],
+            "data": [1, 0]
+        },
+
+        {
+            "action": "navigate",
+            "key": [259, "k"],
+            "data" : [0, -1]
+        },
+
+        {
+            "action": "navigate",
+            "key": [258, "j"],
+            "data": [0, 1]
+        },
+
+        {
+            "action": "navigate",
+            "key": [348, "y"],
+            "data": [-1, -1]
+        },
+
+        {
+            "action": "navigate",
+            "key": [349, "u"],
+            "data": [1, -1]
+        },
+
+        {
+            "action": "navigate",
+            "key": [352, "m"],
+            "data" : [1, 1]
+        },
+
+        {
+            "action": "navigate",
+            "key": [351, "n"],
+            "data" : [-1 ,1]
+        }
+    ],
+
+    "system" : [
+        {
+            "command":"exit_program",
+            "action" : ["Q"]
+        },
+
+        {
+            "command":"print_map",
+            "action" : ["p"]
+        }
+    ]
+}

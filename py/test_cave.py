@@ -1,8 +1,7 @@
 
 from caverlib.world import terrain, entities, mapping
-from caverlib.mapgen import tools
+from caverlib.mapgen import tools, cave_generator
 from screen import check_navigate
-import cave_generator
 import curses
 import display
 

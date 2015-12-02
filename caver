@@ -1,5 +1,5 @@
 #!/bin/sh
 source venv/bin/activate
-python py/screen.py
+python py/main.py
 deactivate
 

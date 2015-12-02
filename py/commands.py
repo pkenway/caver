@@ -2,81 +2,43 @@ from collections import namedtuple
 import curses
 from caverlib.world.mapping import Point
 
-class Command(namedtuple('Command', ['name','keys','target'])):
-    __slots__ = ()
-
-
-def get_all_commands(command_list, input_char):
-    return [c for c in command_list if input_char in c.keys]
-
-def get_first_command(command_list, input_char):
-    for c in command_list:
-        if input_char in c.keys:
-            return c
-    return None
-
-# transformation for each key
-NAVIGATION_MOVES = [
+class CommandInterpreter():
     
-    Command(
-        'move_left',
-        [curses.KEY_LEFT, ord('h')],
-        Point(-1, 0)
-    ),
+    keyreg = None
 
-    Command(
-        'move_right',
-        [curses.KEY_RIGHT, ord('l')],
-        Point(1, 0)
-    ),
+    def __init__(self, message_bus, config):
+        self.message_bus = message_bus
+        self.config = config
+        self.message_bus.register('key_press', self.key_press)
+        self.message_bus.register('mode_change', self.set_mode)
 
-    Command(
-        'move_up',
-        [curses.KEY_UP, ord('k')],
-        Point(0,-1)
-    ),
+    def __del__(self):
+        self.message_bus.unregister('key_press', self.key_press)
+        self.message_bus.unregister('mode_change', self.set_mode)
 
-    Command(
-        'move_down',
-        [curses.KEY_DOWN, ord('j')],
-        Point(0, 1)
-    ),
+    def set_mode(self, new_mode):
+        if new_mode not in UI_MODES:
+            raise ValueError('mode %s does not exist' % new_mode)
+        
+        self.mode = new_mode
+        
+        del keyreg
+        keyreg = {}
+        for cmdlist in self.config:
+            for cmd in cmdlist:
+                for key in cmd['key']:
+                    if key in keyreg:
+                        raise Exception('Duplicate key registration of %s for mode %s' % (key, new_mode))
+                    keyreg[key] = cmd['action']
 
-    Command(
-        'move_diag_upleft',
-        [curses.KEY_A1, ord('y')],
-        Point(-1, -1)
-    ),
 
-    Command(
-        'move_diag_upright',
-        [curses.KEY_A3, ord('u')],
-        Point(1, -1)
-    ),
+    def key_press(self, key):
+        if not key in self.keyreg:
+            return
+        self.message_bus.send(self.keyreg[key])
 
-    Command(
-        'move_diag_downright',
-        [curses.KEY_C3, ord('m')],
-        Point(1, 1)
-    ),
-
-    Command(
-        'move_diag_downleft',
-        [curses.KEY_C1, ord('n')],
-        Point(-1, 1)
-    ),
-
-]
-
-SYSTEM_COMMANDS = [
-    Command(
-        'exit_program',
-        [ord('Q')],
-        None),
-
-    Command(
-        'print_map',
-        [ord('p')],
-        None),
-]
+UI_MODES = {
+    'main_menu': ['system','main_menu'],
+    'browse' : ['system', 'navigation']
+}
 
