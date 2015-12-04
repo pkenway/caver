@@ -2,49 +2,49 @@
     "navigation": [
         
         {
-            "action": "navigate",
+            "action": "NAVIGATE",
             "keys": [260, "h"],
             "data": [-1, 0]
         },
 
         {
-            "action": "navigate",
+            "action": "NAVIGATE",
             "key": [261, "l"],
             "data": [1, 0]
         },
 
         {
-            "action": "navigate",
+            "action": "NAVIGATE",
             "key": [259, "k"],
             "data" : [0, -1]
         },
 
         {
-            "action": "navigate",
+            "action": "NAVIGATE",
             "key": [258, "j"],
             "data": [0, 1]
         },
 
         {
-            "action": "navigate",
+            "action": "NAVIGATE",
             "key": [348, "y"],
             "data": [-1, -1]
         },
 
         {
-            "action": "navigate",
+            "action": "NAVIGATE",
             "key": [349, "u"],
             "data": [1, -1]
         },
 
         {
-            "action": "navigate",
+            "action": "NAVIGATE",
             "key": [352, "m"],
             "data" : [1, 1]
         },
 
         {
-            "action": "navigate",
+            "action": "NAVIGATE",
             "key": [351, "n"],
             "data" : [-1 ,1]
         }
@@ -52,13 +52,8 @@
 
     "system" : [
         {
-            "command":"exit_program",
+            "command":"EXIT_PROGRAM",
             "action" : ["Q"]
-        },
-
-        {
-            "command":"print_map",
-            "action" : ["p"]
         }
     ]
 }
