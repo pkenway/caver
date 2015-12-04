@@ -1,9 +1,9 @@
 
 from caverlib.world import terrain, entities, mapping
 from caverlib.mapgen import tools, cave_generator
-from screen import check_navigate
 import curses
 import display
+import message_bus
 
 def test_make_cave():
 	cave = cave_generator.generate_map(10,7)
@@ -35,24 +35,6 @@ def test_river_generation():
 
         cave_generator.add_river(tile_map, mapping.Point(5,5))
         assert len([tile for point, tile in tile_map.iterate() if tile.composition == terrain.FloorTypes.Water])
-    
-def test_screen_navigate():
-
-    initial_coords = mapping.Point(0,0)
-    screen = (50, 50)
-    map_size = (100, 100)
-
-    new_coords = check_navigate(initial_coords, [curses.KEY_UP], screen, map_size)
-    assert new_coords == initial_coords
-
-    new_coords = check_navigate(initial_coords, [curses.KEY_DOWN], screen, map_size)
-    assert new_coords == mapping.Point(0, 1)
-
-    new_coords = check_navigate(initial_coords, [curses.KEY_LEFT], screen, map_size)
-    assert new_coords == initial_coords
-
-    new_coords = check_navigate(initial_coords, [curses.KEY_RIGHT], screen, map_size)
-    assert new_coords == mapping.Point(1, 0)
 
 def test_random_edge():
     for _ in range(0, 100):
@@ -75,13 +57,46 @@ def test_advance():
     assert tools.advance_towards(mapping.Point(10,10), mapping.Point(10, 0)) == mapping.Point(10, 9)
 
 
+def test_message_bus():
+    msg_bus = message_bus.MessageBus()
+    
+    # create receiver objects
+    class R():
+        got_msg = False
 
-    # ((terrain.Dir.UP, terrain.Dir.DOWN), '║'),
-    # ((terrain.Dir.UP, terrain.Dir.LEFT), '╝'),
-    # ((terrain.Dir.UP, terrain.Dir.RIGHT), '╚'),
-    # ((terrain.Dir.LEFT, terrain.Dir.RIGHT), '═'),
-    # ((terrain.Dir.LEFT, terrain.Dir.DOWN), '╗'),
-    # ((terrain.Dir.DOWN, terrain.Dir.RIGHT), '╔'),
+        def receive(self, data):
+            self.got_msg = True
+            assert data == mapping.Point(0, 1)
+
+    r= R()
+    r2 = R()
+    mtype = message_bus.MType.NAVIGATE
+
+    # no registered listeners
+    msg_bus.send(mtype, mapping.Point(0,1))
+    assert r.got_msg == r2.got_msg == False
+
+    # register a listener and send it a message
+    msg_bus.register(mtype, r.receive)
+    msg_bus.send(mtype, mapping.Point(0,1))
+    assert r.got_msg and not r2.got_msg
+
+    #switch listeners
+    msg_bus.register(mtype, r2.receive)
+    msg_bus.unregister(mtype, r.receive)
+    r.got_msg = False
+    msg_bus.send(mtype, mapping.Point(0,1))
+    assert not r.got_msg and r2.got_msg 
+
+    # now both listening
+    msg_bus.register(mtype, r.receive)
+    r2.got_msg = False
+
+    msg_bus.send(mtype, mapping.Point(0,1))
+    assert r.got_msg and r2.got_msg
+
+    assert len(msg_bus.listeners[mtype]) == 2
+
 
 def test_river_display():
 

@@ -1,8 +1,10 @@
+from message_bus import MType
+
 class ActionListener():
 
     def __init__(self, message_bus):
         self.message_bus = message_bus
-        self.message_bus.register('navigate', self.on_navigate)
+        self.message_bus.register(MType.NAVIGATE, self.on_navigate)
 
         def on_navigate(self, move_vector):
             

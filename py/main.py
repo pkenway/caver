@@ -10,11 +10,11 @@ print('loading...')
 mode_stack = []
 
 # load game engine with message bus
-message_bus = message_bus.MessageBus()
-game_state = game_state.GameState(message_bus)
+msg_bus = message_bus.MessageBus()
+game_state = game_state.GameState(msg_bus)
 command_config = config_loader.get_config('../data/config', 'commands') 
-cmd_interpreter = commands.CommandInterpreter(message_bus, command_config)
-screen =screen.Screen(message_bus, game_state)
+cmd_interpreter = commands.CommandInterpreter(msg_bus, command_config)
+screen =screen.Screen(msg_bus, game_state)
 
 # main menu
 
@@ -31,5 +31,5 @@ screen.init_graphics()
 
 #runloop
 while True:
-    message_bus.send('tick')
-    message_bus.send('get_input')
+    msg_bus.send(message_bus.MType.TICK)
+    msg_bus.send(message_bus.MType.REQUEST_INPUT)

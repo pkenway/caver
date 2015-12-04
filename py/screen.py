@@ -7,6 +7,7 @@ from enum import Enum
 import display
 import commands
 from itertools import chain
+from message_bus import MType
 #constants
 MAX_INPUT_BUFFER = 1024
 
@@ -17,10 +18,10 @@ class Screen():
     def __init__(self, message_bus, game_state):
         self.message_bus = message_bus
         self.game_state = game_state
-        self.message_bus.register('exit', self.exit)
-        self.message_bus.register('set_coords', self.set_coords)
-        self.message_bus.register('tick', self.draw_screen)
-        self.message_bus.register('get_input', self.get_input)
+        self.message_bus.register(MType..EXIT_PROGRAM, self.exit)
+        self.message_bus.register(MType.SET_VIEW_COORDS, self.set_coords)
+        self.message_bus.register(MType.TICK, self.draw_screen)
+        self.message_bus.register(MType.REQUST_INPUT, self.get_input)
         self.exit = False
         self.input_buffer = []
 

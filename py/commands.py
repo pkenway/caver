@@ -1,6 +1,7 @@
 from collections import namedtuple
 import curses
 from caverlib.world.mapping import Point
+from message_bus import MType
 
 class CommandInterpreter():
     
@@ -9,12 +10,12 @@ class CommandInterpreter():
     def __init__(self, message_bus, config):
         self.message_bus = message_bus
         self.config = config
-        self.message_bus.register('key_press', self.key_press)
-        self.message_bus.register('mode_change', self.set_mode)
+        self.message_bus.register(MType.KEY_PRESS, self.key_press)
+        self.message_bus.register(MType.SET_GAME_MODE, self.set_mode)
 
     def __del__(self):
-        self.message_bus.unregister('key_press', self.key_press)
-        self.message_bus.unregister('mode_change', self.set_mode)
+        self.message_bus.unregister(MType.KEY_PRESS, self.key_press)
+        self.message_bus.unregister(MType.SET_GAME_MODE, self.set_mode)
 
     def set_mode(self, new_mode):
         if new_mode not in UI_MODES:
@@ -29,7 +30,7 @@ class CommandInterpreter():
                 for key in cmd['key']:
                     if key in keyreg:
                         raise Exception('Duplicate key registration of %s for mode %s' % (key, new_mode))
-                    keyreg[key] = cmd['action']
+                    keyreg[key] = getattr(MType, cmd['action'])
 
 
     def key_press(self, key):
