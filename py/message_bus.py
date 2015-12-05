@@ -14,28 +14,23 @@ class MessageBus():
         self.listeners[key].remove(listener)
 
     def send(self, key, data=None):
-
-        if not isinstance(key, MType):
-            raise Exception('%s is not a valid message' % key)
-
         if self.logger:
             logger.log('message: %s' % key)
 
         for listener in self.listeners[key]:
             listener(data)
 
-
 # types of messages
 class MType(Enum):
 
     #player actinos
-    NAVIGATE = 0
-    KEY_PRESS = 1
+    NAVIGATE = 'NAVIGATE'
+    KEY_PRESS = 'KEY_PRESS'
 
     #game actions
-    TICK = 100
-    SET_VIEW_COORDS = 101
-    SET_MAP = 102
-    SET_GAME_MODE = 103
-    REQUEST_INPUT = 104
-    EXIT_PROGRAM = 105
+    TICK = 'TICK'
+    SET_VIEW_COORDS = 'SET_VIEW_COORDS'
+    SET_MAP = 'SET_MAP'
+    SET_GAME_MODE = 'SET_GAME_MODE'
+    REQUEST_INPUT = 'REQUEST_INPUT'
+    EXIT_PROGRAM = 'EXIT_PROGRAM'

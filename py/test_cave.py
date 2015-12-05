@@ -4,6 +4,33 @@ from caverlib.mapgen import tools, cave_generator
 import curses
 import display
 import message_bus
+import commands
+
+# mock message receiver
+class R():
+    def __init__(self, key, expected_data):
+        self.key = key
+        self.expected_data = expected_data
+        self.got_msg = False
+
+    def receive(self, data):
+        assert data == self.expected_data
+        self.got_msg = True
+
+    def reset(self):
+        self.got_msg = False
+
+    def register(self, msg_bus):
+        msg_bus.register(self.key, self.receive)
+
+    def unregister(self, msg_bus):
+        msg_bus.unregister(self.key, self.receive)
+
+
+def get_receiver(msg_bus, key, expected_data):
+    r = R(key, expected_data)
+    r.register(msg_bus)
+    return r
 
 def test_make_cave():
 	cave = cave_generator.generate_map(10,7)
@@ -59,43 +86,44 @@ def test_advance():
 
 def test_message_bus():
     msg_bus = message_bus.MessageBus()
-    
-    # create receiver objects
-    class R():
-        got_msg = False
-
-        def receive(self, data):
-            self.got_msg = True
-            assert data == mapping.Point(0, 1)
-
-    r= R()
-    r2 = R()
     mtype = message_bus.MType.NAVIGATE
 
-    # no registered listeners
-    msg_bus.send(mtype, mapping.Point(0,1))
-    assert r.got_msg == r2.got_msg == False
+    payload = mapping.Point(0,1)
+    r= get_receiver(msg_bus, mtype, payload)
+    r2 = get_receiver(msg_bus, mtype, payload)
 
-    # register a listener and send it a message
-    msg_bus.register(mtype, r.receive)
-    msg_bus.send(mtype, mapping.Point(0,1))
+    msg_bus.send(mtype, payload)
+    assert r.got_msg and r2.got_msg
+    
+    assert len(msg_bus.listeners[mtype]) == 2
+
+    r.reset()
+    r2.reset()
+
+    # unregister a listener
+    r2.unregister(msg_bus)
+    msg_bus.send(mtype, payload)
     assert r.got_msg and not r2.got_msg
 
+    r.reset()
+    r2.reset()
+
     #switch listeners
-    msg_bus.register(mtype, r2.receive)
-    msg_bus.unregister(mtype, r.receive)
-    r.got_msg = False
-    msg_bus.send(mtype, mapping.Point(0,1))
-    assert not r.got_msg and r2.got_msg 
+    r2.register(msg_bus)
+    r.unregister(msg_bus)
+    msg_bus.send(mtype, payload)
+    assert not r.got_msg and r2.got_msg
 
-    # now both listening
-    msg_bus.register(mtype, r.receive)
-    r2.got_msg = False
+    r.reset()
+    r2.reset()
 
-    msg_bus.send(mtype, mapping.Point(0,1))
-    assert r.got_msg and r2.got_msg
+    r2.unregister(msg_bus)
 
-    assert len(msg_bus.listeners[mtype]) == 2
+    # no registered listeners
+    msg_bus.send(mtype, payload)
+    assert r.got_msg == r2.got_msg == False
+
+    assert len(msg_bus.listeners[mtype]) == 0
 
 
 def test_river_display():
@@ -105,7 +133,6 @@ def test_river_display():
 
 def test_entity_tag_esarch():
     ent_list = entities.tag_search('common', 'natural')
-    print(ent_list)
     assert len(ent_list) > 0
 
     created_entity = ent_list[0]()
@@ -137,6 +164,23 @@ def test_add_entities():
     rock = entities.rock()
     occupied_tile.entities.insert(0, rock)
     assert entities.visible_entity(occupied_tile.entities).name == 'rock'
+
+
+def test_keyboard_commands():
+    msg_bus = message_bus.MessageBus()
+    cmd_list =[{
+        "modes" : ["browse"],
+        "bindings": {
+            260: {'action': 'NAVIGATE', 'data': (-1, 0)},
+        }
+    }]
+    cmd = commands.CommandInterpreter(msg_bus, cmd_list)
+    cmd.set_mode('browse')
+
+    r = get_receiver(msg_bus, 'NAVIGATE', mapping.Point(-1, 0))
+
+    msg_bus.send(message_bus.MType.KEY_PRESS, 260)
+    assert r.got_msg
 
 
 if __name__ == '__main__':

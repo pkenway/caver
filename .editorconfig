@@ -1,5 +1,6 @@
 # top-most EditorConfig file
 root = true
+trim_trailing_whitespace = true
 
 # Unix-style newlines with a newline ending every file
 [*]
